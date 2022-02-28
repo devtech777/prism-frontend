@@ -70,6 +70,7 @@ import {
   isLoading as areDatesLoading,
   loadAvailableDates,
 } from '../../context/serverStateSlice';
+import { clearDataset } from '../../context/chartDataStateSlice';
 
 import { appConfig } from '../../config';
 import { LayerData, loadLayerData } from '../../context/layers/layer-data';
@@ -286,6 +287,7 @@ function MapView({ classes }: MapViewProps) {
         );
       } else {
         dispatch(updateDateRange({ startDate: dateInt }));
+        dispatch(clearDataset());
       }
     }
 
