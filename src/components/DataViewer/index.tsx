@@ -47,6 +47,10 @@ function DataViewer({ classes }: DatasetProps) {
     if (isDatasetLoading || dataset) {
       setOpen(!loading);
     }
+
+    if (!isDatasetLoading && !dataset) {
+      setOpen(false);
+    }
   }, [dispatch, dataset, isDatasetLoading, loading]);
 
   return (
