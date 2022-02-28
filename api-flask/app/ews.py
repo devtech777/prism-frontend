@@ -118,7 +118,6 @@ def get_ews_responses(
         resp = requests.get(location_url)
         resp.raise_for_status()
 
-        format = '%d/%m/%Y %H:%M'
         rows = list()
         dates = {'levels': 'River Level'}
         values = {'levels': 'Current'}
