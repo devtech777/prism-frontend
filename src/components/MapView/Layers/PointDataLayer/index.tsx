@@ -96,7 +96,7 @@ function PointDataLayer({ layer }: { layer: PointDataLayerProps }) {
     const params: EwsDatasetParams = {
       id: get(properties, 'id'),
       start: get(properties, 'start_date'),
-      end: get(properties, 'start_date'),
+      end: get(properties, 'end_date'),
     };
 
     dispatch(addPointTitle(title));

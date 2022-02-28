@@ -73,13 +73,14 @@ export const loadEwsDataset = createAsyncThunk<
 
       return Object.fromEntries(
         /* eslint-disable fp/no-mutating-methods */
-        Object.entries(formattedRow).sort(
-          ([, a], [, b]) => new Date(a).getTime() - new Date(b).getTime(),
-        ),
+        Object.entries(formattedRow)
+          .sort(([, a], [, b]) => new Date(a).getTime() - new Date(b).getTime())
+          .slice(0, -1),
       );
     }
     return row;
   });
+
   return { rows: sortedRows, columns };
 });
 
