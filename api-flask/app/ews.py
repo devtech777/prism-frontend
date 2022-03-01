@@ -75,6 +75,19 @@ def get_ews_responses(
     resp.raise_for_status()
     features = resp.json().get('features')
 
+    def status_to_number(status):
+        """Convert status string to number."""
+        if(status == 'active'):
+            return 1;
+        elif(status == 'watch'):
+            return 2
+        elif(status == 'warning'):
+            return 3
+        elif(status == 'severe_warning'):
+            return 4
+        else:
+            return 0
+
     def format_details(location):
         """Massage received location details into PRISM format."""
         ACTIVE = 'active'
@@ -92,6 +105,8 @@ def get_ews_responses(
             'id': properties['id'],
             'external_id': properties['external_id'],
             'name': properties['name'],
+            'status': status_to_number(properties['status']),
+            'status1': properties['status1'],
             'is_available': 1 if is_active and is_operational else 0,
             'water_height': properties['water_height'],
             'watch_level': trigger_levels['watch_level'],
