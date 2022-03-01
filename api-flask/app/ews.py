@@ -78,7 +78,7 @@ def get_ews_responses(
     def status_to_number(status):
         """Convert status string to number."""
         if(status == 'active'):
-            return 1;
+            return 1
         elif(status == 'watch'):
             return 2
         elif(status == 'warning'):
