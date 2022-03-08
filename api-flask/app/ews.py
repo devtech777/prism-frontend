@@ -5,9 +5,11 @@ from dateutil.parser import parse as dtparser
 
 from flask import request
 
+import numpy
+
 import requests
 
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadRequest
 
 
 BASE_API = 'https://api.ews1294.com/v1/'
@@ -17,7 +19,6 @@ DATA_COLLECTION_START_DATE_STR = '2021-05-01'
 def parse_ews_params():
     """Transform params used for ews request."""
     only_dates = True if request.args.get('onlyDates') else False
-    location_id = request.args.get('locationId', None)
     today = datetime.now().replace(tzinfo=timezone.utc)
     begin_datetime_str = request.args.get('beginDateTime')
 
@@ -47,12 +48,11 @@ def parse_ews_params():
     if begin_datetime > today:
         raise BadRequest('beginDateTime value must be less or equal to today')
 
-    return only_dates, location_id, begin_datetime, end_datetime
+    return only_dates, begin_datetime, end_datetime
 
 
 def get_ews_responses(
         only_dates: bool,
-        location_id: int or str or None,
         begin: datetime,
         end: datetime
 ):
@@ -75,29 +75,72 @@ def get_ews_responses(
     resp.raise_for_status()
     features = resp.json().get('features')
 
-    def status_to_number(status):
+    # datapoints endpoint requires to exend end date otherwise
+    # it will return empty list
+    datapoints_url = '{0}datapoints?start={1}&end={2}'.format(
+        BASE_API, start_date, end_date + timedelta(days=1)
+    )
+
+    datapoints_resp = requests.get(datapoints_url)
+    datapoints_resp.raise_for_status()
+    datapoints = [
+        {
+            'location_id': _['location_id'],
+            'level_date': dtparser(_['value'][0]).replace(tzinfo=timezone(timedelta(hours=7))),
+            'level_value': _['value'][1]
+        }
+        for _ in datapoints_resp.json()
+        if dtparser(_['value'][0]).date() <= start_date
+    ]
+
+    def get_datapoint(datapoints, location):
+        """Get available datapoints for a given location."""
+        properties = location['properties']
+        location_id = properties['id']
+        trigger_levels = properties['trigger_levels']
+        location_datapoints = [_ for _ in datapoints if _['location_id'] == location_id]
+        level_values = [_['level_value'] for _ in location_datapoints]
+        maximum = int(numpy.max(level_values)) if len(level_values) > 0 else 0
+
+        rows = list()
+        dates = {'levels': 'River Level'}
+        values = {'levels': 'Current'}
+        warning_values = {'levels': 'Warning'}
+        severe_values = {'levels': 'Severe Warning'}
+        for index, item in enumerate(location_datapoints):
+            dates[str(index)] = item['level_date']
+            values[str(index)] = item['level_value']
+            warning_values[str(index)] = trigger_levels['warning']
+            severe_values[str(index)] = trigger_levels['severe_warning']
+
+        columns = list(dates.keys())
+        rows.append(dates)
+        rows.append(values)
+        rows.append(warning_values)
+        rows.append(severe_values)
+        return (maximum, {'rows': rows, 'columns': columns})
+
+    def status_to_number(status, max_value, warning, severe):
         """Convert status string to number."""
-        if(status == 'active'):
-            return 1
-        elif(status == 'watch'):
-            return 2
-        elif(status == 'warning'):
-            return 3
-        elif(status == 'severe_warning'):
-            return 4
+        if status == 'active':
+            if max_value >= severe:
+                return 3
+            elif max_value >= warning:
+                return 2
+            else:
+                return 1
         else:
             return 0
 
     def format_details(location):
         """Massage received location details into PRISM format."""
-        ACTIVE = 'active'
-        OPERATIONAL = 'operational'
-
         coordinates = location['geometry']['coordinates']
         properties = location['properties']
         trigger_levels = properties['trigger_levels']
-        is_active = properties['status'].lower() == ACTIVE
-        is_operational = properties['status1'].lower() == OPERATIONAL
+        severe = trigger_levels['severe_warning']
+        warning = trigger_levels['warning']
+        maximum = get_datapoint(datapoints, location)[0]
+        dataset = get_datapoint(datapoints, location)[1]
 
         return {
             'lon': coordinates[0],
@@ -105,52 +148,16 @@ def get_ews_responses(
             'id': properties['id'],
             'external_id': properties['external_id'],
             'name': properties['name'],
-            'status': status_to_number(properties['status']),
+            'status': status_to_number(properties['status'], maximum, warning, severe),
             'status1': properties['status1'],
-            'is_available': 1 if is_active and is_operational else 0,
             'water_height': properties['water_height'],
             'watch_level': trigger_levels['watch_level'],
-            'warning': trigger_levels['warning'],
-            'severe_warning': trigger_levels['severe_warning'],
+            'warning': warning,
+            'severe_warning': severe,
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            'max': maximum,
+            'dataset': dataset
         }
 
-    locations = list(map(format_details, features))
-
-    if location_id:
-        filtered_locations = [_ for _ in locations if int(_['id']) == int(location_id)]
-
-        if not filtered_locations:
-            raise NotFound('locationId not found')
-
-        location_url = '{0}datapoints?location={1}&start={2}&end={3}'.format(
-            BASE_API,
-            location_id,
-            start_date, end_date
-        )
-
-        resp = requests.get(location_url)
-        resp.raise_for_status()
-
-        rows = list()
-        dates = {'levels': 'River Level'}
-        values = {'levels': 'Current'}
-        warning_values = {'levels': 'Warning'}
-        severe_values = {'levels': 'Severe Warning'}
-        for index, item in enumerate(resp.json()):
-            ict_tz = timezone(timedelta(hours=7))
-            local_date = dtparser(item['value'][0]).replace(tzinfo=ict_tz)
-            dates[str(index)] = local_date
-            values[str(index)] = item['value'][1]
-            warning_values[str(index)] = filtered_locations[0]['warning']
-            severe_values[str(index)] = filtered_locations[0]['severe_warning']
-
-        columns = list(dates.keys())
-        rows.append(dates)
-        rows.append(values)
-        rows.append(warning_values)
-        rows.append(severe_values)
-        return {'rows': rows, 'columns': columns}
-    else:
-        return locations
+    return list(map(format_details, features))

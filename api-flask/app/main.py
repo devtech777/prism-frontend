@@ -166,9 +166,9 @@ def get_kobo_forms():
 @app.route('/ews/data', methods=['GET'])
 def get_ews_data():
     """Get cambodia EWS responses."""
-    only_dates, location_id, begin_datetime, end_datetime = parse_ews_params()
+    only_dates, begin_datetime, end_datetime = parse_ews_params()
     form_responses = get_ews_responses(
-        only_dates, location_id, begin_datetime, end_datetime
+        only_dates, begin_datetime, end_datetime
     )
 
     return Response(json.dumps(form_responses), mimetype='application/json')
