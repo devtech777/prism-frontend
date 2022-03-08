@@ -539,13 +539,9 @@
         "type": "string",
         "label": "Name"
       },
-      "water_height": {
-        "type": "string",
-        "label": "Water height"
-      },
-      "level_mean": {
+      "max": {
         "type": "number",
-        "label": "Mean water level"
+        "label": "Daily max level"
       }
     },
     "opacity": 1,
@@ -554,9 +550,8 @@
     "legend": [
       {"label": "Inactive", "value": 0, "color": "#888888"},
       {"label": "Active", "value": 1, "color": "#31A354"},
-      {"label": "Watch", "value": 2, "color": "#F2DA02"},
-      {"label": "Warning", "value": 3, "color": "#FDAE6B"},
-      {"label": "Severe Warning", "value": 4, "color": "#E34A33"}
+      {"label": "Warning", "value": 2, "color": "#FDAE6B"},
+      {"label": "Severe Warning", "value": 3, "color": "#E34A33"}
     ]
   }
 }

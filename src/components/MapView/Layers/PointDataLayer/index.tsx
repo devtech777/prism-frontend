@@ -16,9 +16,8 @@ import { layerDataSelector } from '../../../../context/mapStateSlice/selectors';
 import { useDefaultDate } from '../../../../utils/useDefaultDate';
 import { getFeatureInfoPropsData } from '../../utils';
 import {
-  loadEwsDataset,
+  addDataset,
   clearDataset,
-  EwsDatasetParams,
   addPointTitle,
 } from '../../../../context/chartDataStateSlice';
 
@@ -83,8 +82,8 @@ function PointDataLayer({ layer }: { layer: PointDataLayerProps }) {
     dispatch(clearDataset());
     const { properties } = evt.features[0];
 
-    const isAvailable = get(properties, 'is_available');
-    if (!isAvailable) {
+    const status = get(properties, 'status');
+    if (status === 0) {
       onToggleHover('not-allowed', evt.target);
       return;
     }
@@ -93,14 +92,9 @@ function PointDataLayer({ layer }: { layer: PointDataLayerProps }) {
     const name = get(properties, 'name');
     const title = `River Level - ${name} (${externalId})`;
 
-    const params: EwsDatasetParams = {
-      id: get(properties, 'id'),
-      start: get(properties, 'start_date'),
-      end: get(properties, 'end_date'),
-    };
-
     dispatch(addPointTitle(title));
-    dispatch(loadEwsDataset(params));
+    const dataset = JSON.parse(get(properties, 'dataset'));
+    dispatch(addDataset(dataset));
   };
 
   return (

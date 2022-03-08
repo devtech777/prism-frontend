@@ -88,6 +88,35 @@ export const datasetResultStateSlice = createSlice({
   name: 'DatasetResultSlice',
   initialState,
   reducers: {
+    addDataset: (
+      { ...rest },
+      { payload }: PayloadAction<TableData>,
+    ): DatasetState => {
+      const { rows, columns } = payload;
+
+      // Dataset object are not ordered sort dates
+      const sortedRows = rows.map((row: TableRowType, index: number) => {
+        if (index === 0) {
+          const formattedRow: { [k: string]: string | number } = Object.assign(
+            {},
+            ...Object.entries(row).map(([k, v]) => ({
+              [k]: moment(v).local().format('DD/MM/YYYY HH:mm'),
+            })),
+          );
+
+          return Object.fromEntries(
+            /* eslint-disable fp/no-mutating-methods */
+            Object.entries(formattedRow)
+              .sort(
+                ([, a], [, b]) => new Date(a).getTime() - new Date(b).getTime(),
+              )
+              .slice(0, -1),
+          );
+        }
+        return row;
+      });
+      return { ...rest, data: { rows: sortedRows, columns } };
+    },
     clearDataset: (state): DatasetState => ({
       ...state,
       data: undefined,
@@ -129,6 +158,10 @@ export const PointTitleSelector = (state: RootState): string | undefined =>
   state.datasetState.title;
 
 // Setters
-export const { clearDataset, addPointTitle } = datasetResultStateSlice.actions;
+export const {
+  addDataset,
+  clearDataset,
+  addPointTitle,
+} = datasetResultStateSlice.actions;
 
 export default datasetResultStateSlice.reducer;
