@@ -120,9 +120,10 @@ def get_ews_responses(
         rows.append(severe_values)
         return (maximum, {'rows': rows, 'columns': columns})
 
-    def status_to_number(status, max_value, warning, severe):
+    def status_to_number(dataset, max_value, warning, severe):
         """Convert status string to number."""
-        if status == 'active':
+        daily_count = len(dataset['rows'][0])
+        if daily_count > 1:
             if max_value >= severe:
                 return 3
             elif max_value >= warning:
@@ -148,7 +149,7 @@ def get_ews_responses(
             'id': properties['id'],
             'external_id': properties['external_id'],
             'name': properties['name'],
-            'status': status_to_number(properties['status'], maximum, warning, severe),
+            'status': status_to_number(dataset, maximum, warning, severe),
             'status1': properties['status1'],
             'water_height': properties['water_height'],
             'watch_level': trigger_levels['watch_level'],

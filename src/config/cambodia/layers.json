@@ -531,6 +531,10 @@
     "data": "http://localhost/ews/data",
     "date_url": "http://localhost/ews/data?onlyDates=true",
     "feature_info_props": {
+      "id": {
+        "type": "string",
+        "label": "Location ID"
+      },
       "external_id": {
         "type": "string",
         "label": "External ID"
@@ -548,10 +552,10 @@
     "measure": "status",
     "legend_text": "This layer shows river water level in millimeters (mm). It is reported from People in Need (PIN) automated river water gauge.",
     "legend": [
-      {"label": "Inactive", "value": 0, "color": "#888888"},
-      {"label": "Active", "value": 1, "color": "#31A354"},
-      {"label": "Warning", "value": 2, "color": "#FDAE6B"},
-      {"label": "Severe Warning", "value": 3, "color": "#E34A33"}
+      {"label": "0 -Inactive", "value": 0, "color": "#888888"},
+      {"label": "1 - Active", "value": 1, "color": "#31A354"},
+      {"label": "2 - Warning", "value": 2, "color": "#FDAE6B"},
+      {"label": "3 - Severe Warning", "value": 3, "color": "#E34A33"}
     ]
   }
 }
