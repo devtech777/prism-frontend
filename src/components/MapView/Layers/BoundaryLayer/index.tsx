@@ -1,6 +1,5 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { get } from 'lodash';
 import { GeoJSONLayer } from 'react-mapbox-gl';
 import * as MapboxGL from 'mapbox-gl';
 import { showPopup, hidePopup } from '../../../../context/tooltipStateSlice';
@@ -17,6 +16,7 @@ import {
 import { toggleSelectedBoundary } from '../../../../context/mapSelectionLayerStateSlice';
 import { isPrimaryBoundaryLayer } from '../../../../config/utils';
 import { onlyBoundaryLayerUnderCursor } from '../../../../utils/map-utils';
+import { getFullLocationName } from '../../../../utils/name-utils';
 
 function onToggleHover(cursor: string, targetMap: MapboxGL.Map) {
   // eslint-disable-next-line no-param-reassign, fp/no-mutation
@@ -39,15 +39,9 @@ function BoundaryLayer({ layer }: { layer: BoundaryLayerProps }) {
 
   const onHoverHandler = (evt: any) => {
     dispatch(hidePopup());
-    const coordinates = evt.lngLat;
-    const { properties } = evt.features[0];
-
     onToggleHover('pointer', evt.target);
-
-    const locationName = layer.adminLevelNames
-      .map(level => get(properties, level, '') as string)
-      .join(', ');
-
+    const coordinates = evt.lngLat;
+    const locationName = getFullLocationName(layer, evt.features[0]);
     dispatch(showPopup({ coordinates, locationName }));
   };
 
