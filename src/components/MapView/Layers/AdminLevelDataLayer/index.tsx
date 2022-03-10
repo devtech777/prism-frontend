@@ -88,29 +88,32 @@ function AdminLevelDataLayers({ layer }: { layer: AdminLevelDataLayerProps }) {
     },
   };
 
+  const onHoverHandler = (evt: any) => {
+    const dataField = get(evt.features[0], `properties.data`, 'No data');
+
+    // by default add `data_field` to the tooltip
+    dispatch(
+      addPopupData({
+        [layer.title]: {
+          data: dataField,
+          coordinates: evt.lngLat,
+        },
+      }),
+    );
+
+    // then add feature_info_props as extra fields to the tooltip
+    dispatch(
+      addPopupData(getFeatureInfoPropsData(layer.featureInfoProps || {}, evt)),
+    );
+  };
+
   return (
     <GeoJSONLayer
       before={`layer-${boundaryId}-line`}
       id={`layer-${layer.id}`}
       data={features}
       fillPaint={fillPaintData}
-      fillOnClick={async (evt: any) => {
-        // by default add `data_field` to the tooltip
-        dispatch(
-          addPopupData({
-            [layer.title]: {
-              data: get(evt.features[0], 'properties.data', 'No Data'),
-              coordinates: evt.lngLat,
-            },
-          }),
-        );
-        // then add feature_info_props as extra fields to the tooltip
-        dispatch(
-          addPopupData(
-            getFeatureInfoPropsData(layer.featureInfoProps || {}, evt),
-          ),
-        );
-      }}
+      fillOnMouseMove={onHoverHandler}
     />
   );
 }
