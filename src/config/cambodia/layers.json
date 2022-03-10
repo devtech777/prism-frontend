@@ -79,6 +79,12 @@
     "admin_level": 3,
     "admin_code": "Adm3_NCDD",
     "opacity": 0.9,
+    "feature_info_props": {
+      "nameKm": {
+        "type": "text",
+        "label": "Name"
+      }
+    },
     "legend": [
       {
         "value": "0 - 100",
