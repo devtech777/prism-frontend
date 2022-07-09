@@ -200,6 +200,14 @@
         "female_headed_hhs",
         "disability_prev_rate"
       ],
+      "women_and_children":[
+        "0_6_months",
+        "6_23_months",
+        "24_59_months",
+        "preg_women",
+        "lact_mother_wfp",
+        "lact_mother"
+      ],
       "living_conditions": [
         "improved_sanitation",
         "improved_drinking_water",
